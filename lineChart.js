@@ -38,10 +38,12 @@ let svg = d3.create('svg')
 
 svg.append("g")
 .attr("transform", `translate(0, ${height - marginBottom})`)
+.attr("class", "xAxis")
 .call(d3.axisBottom(x));
 
 svg.append("g")
 .attr("transform", `translate(${marginLeft}, 0)`)
+.attr("class", "yAxis")
 .call(d3.axisLeft(y));
 
 svg.append("path")
@@ -54,5 +56,15 @@ svg.append("path")
 .attr("stroke", "none")
 .attr("fill", "black")
 .attr("fill-opacity", "0.3")
+
+let circle = svg.selectAll("circle")
+.data(randomData)
+
+
+circle.enter().append("circle")
+.attr("r", 5)
+.attr("cx", (d) => {return x(d.x)})
+.attr("cy", (d) => {return y(d.y)})
+.attr("fill", "yellow")
 
 chartCont.append(svg.node());

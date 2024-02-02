@@ -37,6 +37,7 @@ let svg = d3.create('svg')
 .attr("width", width)
 .attr("height", height)
 .attr("color", "white")
+.attr("class", "svg");
 
 svg.append("g")
 .attr("transform", `translate(0, ${height - marginBottom})`)
@@ -53,24 +54,24 @@ let lineSVG = svg.append("path")
 .attr("d", line)
 .attr("stroke", "yellow")
 .attr("fill", "none")
-.attr("class", "line")
+.attr("class", "line");
 
 let areaSVG = svg.append("path")
 .attr("d", area(randomData))
 .attr("stroke", "none")
 .attr("fill", "#041537")
 .attr("fill-opacity", "0.3")
-.attr("class", "area")
+.attr("class", "area");
 
 let circle = svg.selectAll("circle")
-.data(randomData)
+.data(randomData);
 
 
 circle.join("circle")
 .attr("r", 5)
 .attr("cx", (d) => {return x(d.x)})
 .attr("cy", (d) => {return y(d.y)})
-.attr("fill", "yellow")
+.attr("fill", "yellow");
 
 chartCont.append(svg.node());
 
@@ -81,20 +82,21 @@ function updateLine() {
 
     lineSVG
     .datum(randomData)
-    .attr("d", line)
+    .attr("d", line);
 
     areaSVG
     .datum(randomData)
-    .attr("d", area)
+    .attr("d", area);
 
     let circle = svg.selectAll("circle")
-    .data(randomData)
+    .data(randomData);
 
     circle.join("circle")
     .attr("r", 5)
     .attr("cx", (d) => {return x(d.x)})
     .attr("cy", (d) => {return y(d.y)})
     .attr("fill", "yellow")
+    .attr("class", "circle");
 }
 
 setInterval(updateLine, 1000);

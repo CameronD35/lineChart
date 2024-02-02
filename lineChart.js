@@ -15,10 +15,12 @@ let randomData = [
     {x: 40, y: 90}
 ];
 
+let globX = 40
+let globY = 90
 
-let x = d3.scaleLinear([0, d3.max(randomData, (d) => {return d.x})], [marginLeft, width - marginRight]);
+let x = d3.scaleLinear([0, 100], [marginLeft, width - marginRight]);
 
-let y = d3.scaleLinear([0, d3.max(randomData, (d) => {return d.y})], [height - marginBottom, marginTop]);
+let y = d3.scaleLinear([0, 100], [height - marginBottom, marginTop]);
 
 let line = d3.line()
 .x((d) => x(d.x))
@@ -46,25 +48,53 @@ svg.append("g")
 .attr("class", "yAxis")
 .call(d3.axisLeft(y));
 
-svg.append("path")
-.attr("d", line(randomData))
+let lineSVG = svg.append("path")
+.datum(randomData)
+.attr("d", line)
 .attr("stroke", "yellow")
 .attr("fill", "none")
+.attr("class", "line")
 
-svg.append("path")
+let areaSVG = svg.append("path")
 .attr("d", area(randomData))
 .attr("stroke", "none")
-.attr("fill", "black")
+.attr("fill", "#041537")
 .attr("fill-opacity", "0.3")
+.attr("class", "area")
 
 let circle = svg.selectAll("circle")
 .data(randomData)
 
 
-circle.enter().append("circle")
+circle.join("circle")
 .attr("r", 5)
 .attr("cx", (d) => {return x(d.x)})
 .attr("cy", (d) => {return y(d.y)})
 .attr("fill", "yellow")
 
 chartCont.append(svg.node());
+
+function updateLine() {
+    globX += 3;
+    globY -= 3;
+    randomData.push({x: globX, y: globY});
+
+    lineSVG
+    .datum(randomData)
+    .attr("d", line)
+
+    areaSVG
+    .datum(randomData)
+    .attr("d", area)
+
+    let circle = svg.selectAll("circle")
+    .data(randomData)
+
+    circle.join("circle")
+    .attr("r", 5)
+    .attr("cx", (d) => {return x(d.x)})
+    .attr("cy", (d) => {return y(d.y)})
+    .attr("fill", "yellow")
+}
+
+setInterval(updateLine, 1000);

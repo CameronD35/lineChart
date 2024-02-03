@@ -1,8 +1,16 @@
 * {
     font-family: Inter;
     font-weight: 500;
+    color: white;
 }
 
 body{
     background-color: #333;
+}
+
+#title{
+    font-size: 40px;
+    font-weight: 900;
+    margin: 0px 0px 0px 20px;
+    cursor: default;
 }

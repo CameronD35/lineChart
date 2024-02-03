@@ -14,3 +14,9 @@ body{
     margin: 0px 0px 0px 20px;
     cursor: default;
 }
+
+.label{
+    fill: white;
+    font-weight: 800;
+    opacity: 0.5;
+}

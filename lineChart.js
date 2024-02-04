@@ -30,6 +30,14 @@ class Graph {
 
     constructor(width, height, marginObj, container, dataset) {
 
+        // Set the high bound for the domain, based off the highest x value in the dataset
+        this.higherDomainBound = d3.max(dataset, (d) => { return d.x});
+
+        this.lowerDomainBound = 0;
+
+        this.domainLength = Infinity;
+
+
         // Defines the margin, width, height, and container for the object
         this.marginObj = marginObj;
         this.width = width;
@@ -88,11 +96,34 @@ class Graph {
 
         // Pushes the global values to the dataset --USED FOR TESTING--
         dataset.push({x: globX, y: globY});
+        
+
+        // Set the high bound for the domain, based off the highest x value in the dataset
+        this.higherDomainBound = d3.max(dataset, (d) => { return d.x});
+
+        // Sets the low bound for the domain, based off (higherDomainBound - domainLength)
+        // If the domain Length results in a zero or negative lowerDomainBound, then it will to the full domain;
+        // I fthe difference in higherDomainBound - domainLength is < 10, then the lowerDomainBound will = 10;
+        this.lowerDomainBound = (() => {
+            if ((this.higherDomainBound - this.domainLength) <= 1) {
+
+                return 0;
+
+            } else if ((this.higherDomainBound - this.domainLength) > (this.higherDomainBound - 10)) {
+
+                return this.higherDomainBound - 10;
+
+            } else {
+
+                return this.higherDomainBound - this.domainLength;
+
+            }
+        })()
 
 
         // Re-definies the x and y scales for this object
-        this.xScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.x}), [this.marginObj.left, width - this.marginObj.right]);
-        this.yScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.y}), [height - this.marginObj.bottom, this.marginObj.top]);
+        this.xScale = d3.scaleLinear([this.lowerDomainBound, this.higherDomainBound], [this.marginObj.left, this.width - this.marginObj.right]);
+        this.yScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.y}), [this.height - this.marginObj.bottom, this.marginObj.top]);
 
 
         // Creates a new line generator
@@ -132,9 +163,12 @@ class Graph {
     }
 
     changeDomain(domainLength, dataset) {
-    
+        this.domainLength = domainLength;
+
+        let filteredData = dataset.filter((d) => { return d.x >= this.lowerDomainBound })
     }
 }
+
 let test = new Graph(300, 300, margin, ".chartContainer", randomData);
 
 test.create(randomData);
@@ -225,28 +259,11 @@ function createYAxis(svgVar, className, yScale) {
     return yAxis;
 }
 
-function changeDomain(domainLength, dataset, xAxis){
-
-    let higherDomainBound = d3.max(dataset, (d) => { return d.x});
-
-    // If the domain Length results in a zero or negative lowerDomainBound, then it will defalut to higherDomainBound - 10;
-    let lowerDomainBound = (higherDomainBound - domainLength) <= 1 ? higherDomainBound - 10 : higherDomainBound - domainLength;
-    console.log(`[${lowerDomainBound}, ${higherDomainBound}]`)
-    // x-axis scale definition
-    let xScale = d3.scaleLinear([lowerDomainBound, higherDomainBound], [margin.left, width - margin.right]);
-
-    let filteredData = dataset.filter((d) => { return d.x >= lowerDomainBound })
-
-    xAxis.call(d3.axisBottom(xScale))
-
-
-}
-
 let valueDisplay = document.querySelector(".sliderNumInput")
 valueDisplay.onkeydown = async function(key){
 
     if(key.keyCode == 13){
-        changeDomain(valueDisplay.value, randomData)
+        test.changeDomain(valueDisplay.value, randomData)
 
         valueDisplay.blur();
 

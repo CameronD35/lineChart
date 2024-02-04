@@ -26,105 +26,118 @@ let globY = 90
 // Transistion instance used for animation
 
 // Function for updating the graph
-class graph {
+class Graph {
 
-    constructor(width, height, marginObj, container){
-        this.xScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.x}), [marginObj.left, width - marginObj.right]);
-        this.yScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.y}), [height - marginObj.bottom, marginObj.top]);
+    constructor(width, height, marginObj, container, dataset) {
 
+        // Defines the margin, width, height, and container for the object
+        this.marginObj = marginObj;
+        this.width = width;
+        this.height = height;
+        this.container = document.querySelector(container);
+
+
+        // Defines the initial x-scale for the object
+        this.xScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.x}), [marginObj.left, width - marginObj.right]);
+
+        // Defines the initial y-scale for the object
+        this.yScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.y}), [height - marginObj.bottom, marginObj.top]);
+
+        // Definies the svg for this object
         this.svg = d3.create('svg')
         .attr("width", width)
         .attr("height", height)
         .attr("color", "white")
         .attr("class", "svg");
 
+        // Definies and creaates the axes for this object
         this.xAxis = createXAxis(this.svg, "xAxis", this.xScale);
         this.yAxis = createYAxis(this.svg, "yAxis", this.yScale);
 
-        this.container = document.querySelector(container);
-
-
-        this.text = "hi";
-
+        // Defines the axis labels for the object
         this.xAxisLabel = createAxisLabel(this.svg, "x", "Time", "label");
         this.yAxisLabel = createAxisLabel(this.svg, "y", "Number", "label");
 
-        console.log(this.text);
 
-        // line path
-        this.linePath = createLine(this.svg, randomData, "yellow", this.xScale, this.yScale);
+        // Defines the line path for this object
+        this.linePath = createLine(this.svg, dataset, "yellow", this.xScale, this.yScale);
 
-        // area path
-        this.areaPath = createArea(this.svg, randomData, "#041537", this.xScale, this.yScale);
+        // Defines the area path for this object
+        this.areaPath = createArea(this.svg, dataset, "#041537", this.xScale, this.yScale);
 
         // datapoint circles
-        this.circles = createCircles(this.svg, randomData, "yellow", this.xScale, this.yScale);
+        this.circles = createCircles(this.svg, dataset, "yellow", this.xScale, this.yScale);
+    }
 
+    create(dataset) {
         // Append the chart to the container
         this.container.append(this.svg.node());
 
+
+        // Interval that updates the graph every 1 second --USED FOR TESTING--
         setInterval(() => {
-            updateGraph(this.svg, this.linePath, this.areaPath, randomData, this.xAxis, this.yAxis);
+            this.update(dataset);
         }, 1000);
     }
 
-    update(){
+    update(dataset) {
 
-    }
+        // Global x and y values --USED FOR TESTING--
+        globX += 6;
+        globY += 6;
 
-    changeDomain(){
-
-    }
-}
-let test = new graph(300, 300, margin, ".chartContainer");
-
-
-function updateGraph(svgVar, lineVar, areaVar, dataset, xAxis, yAxis) {
-
-    globX += 6;
-    globY += 6;
-
-    dataset.push({x: globX, y: globY});
-
-    // x-axis scale definition
-    let xScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.x}), [margin.left, width - margin.right]);
-    
-    // y-axis scale definition
-    let yScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.y}), [height - margin.bottom, margin.top]);
+        // Pushes the global values to the dataset --USED FOR TESTING--
+        dataset.push({x: globX, y: globY});
 
 
-    let lineGen = d3.line()
-        .x((d) => xScale(d.x))
-        .y((d) => yScale(d.y))
+        // Re-definies the x and y scales for this object
+        this.xScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.x}), [this.marginObj.left, width - this.marginObj.right]);
+        this.yScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.y}), [height - this.marginObj.bottom, this.marginObj.top]);
 
-    let areaGen = d3.area()
-        .x((d) => xScale(d.x))
-        .y0(yScale(d3.min(dataset, (e) => {return e.y})))
-        .y1((d) => yScale(d.y));
 
-    xAxis.call(d3.axisBottom(xScale));
-    yAxis.call(d3.axisLeft(yScale));
+        // Creates a new line generator
+        let lineGen = d3.line()
+        .x((d) => this.xScale(d.x))
+        .y((d) => this.yScale(d.y))
 
-    lineVar
-        .datum(dataset)
+        // Creates a new area generator
+        let areaGen = d3.area()
+        .x((d) => this.xScale(d.x))
+        .y0(this.yScale(d3.min(dataset, (e) => {return e.y})))
+        .y1((d) => this.yScale(d.y));
+
+        // Calls this objects axes using the objects new scales
+        this.xAxis.call(d3.axisBottom(this.xScale));
+        this.yAxis.call(d3.axisLeft(this.yScale));
+
+
+        // Resets the datum used for this object's line path and redraws the line
+        this.linePath.datum(dataset)
         .attr("d", lineGen);
 
-    areaVar
-        .datum(dataset)
+        // Resets the datum used for this object's area path and redraws the area
+        this.areaPath.datum(dataset)
         .attr("d", areaGen);
 
-    let circle = svgVar.selectAll("circle")
-        .data(dataset);
 
-    circle.join("circle")
-        .attr("r", 2.5)
-        .attr("cx", (d) => {return xScale(d.x)})
-        .attr("cy", (d) => {return yScale(d.y)})
-        .attr("fill", "yellow")
-        .attr("class", "circle");
+        // Adds circles to all the new data points
+        this.circles = this.svg.selectAll("circle")
+            .data(dataset)
+            .join("circle")
+            .attr("r", 2.5)
+            .attr("cx", (d) => {return this.xScale(d.x)})
+            .attr("cy", (d) => {return this.yScale(d.y)})
+            .attr("fill", "yellow")
+            .attr("class", "circle");
+    }
 
-//    d3.selectAll(".xAxis").transition(axisTransition);
+    changeDomain(domainLength, dataset) {
+    
+    }
 }
+let test = new Graph(300, 300, margin, ".chartContainer", randomData);
+
+test.create(randomData);
 
 function createAxisLabel(svgVar, axis, label, className) {
     let axisLabel = svgVar.append("text")
@@ -247,5 +260,3 @@ valueDisplay.addEventListener('input', () => {
         valueDisplay.value = valueDisplay.value.slice(0, valueDisplay.maxLength);
     }
 });
-
-createGraph();

@@ -20,3 +20,22 @@ body{
     font-weight: 800;
     opacity: 0.5;
 }
+
+.sliderNumInput{
+    color: white;
+    font-size: 12px;
+    margin: 0 5px;
+    background: none;
+    height: 18px;
+    width: 60px;
+    border-width: 0px 0px 2px 0px;
+    border-color: white;
+    border-radius: 3px;
+    outline: none;
+    text-align: center;
+    cursor: text;
+}
+
+.sliderNumInput::-webkit-outer-spin-button, ::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+}

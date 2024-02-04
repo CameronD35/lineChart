@@ -26,60 +26,63 @@ let globY = 90
 // Transistion instance used for animation
 
 // Function for updating the graph
+class graph {
 
-function createGraph() {
-    let axisTransition = d3.transition()
-        .duration(500)
-        .ease(d3.easeLinear)
+    constructor(width, height, marginObj, container){
+        this.xScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.x}), [marginObj.left, width - marginObj.right]);
+        this.yScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.y}), [height - marginObj.bottom, marginObj.top]);
 
-        // x-axis scale definition
-        let x = d3.scaleLinear(d3.extent(randomData, (d) => { return d.x}), [margin.left, width - margin.right]);
-        console.log(x)
-        // y-axis scale definition
-        let y = d3.scaleLinear(d3.extent(randomData, (d) => { return d.y}), [height - margin.bottom, margin.top]);
-
-        // Container for the chart
-        let chartCont = document.querySelector(".chartContainer")
-
-        // SVG generator
-        let svg = d3.create('svg')
+        this.svg = d3.create('svg')
         .attr("width", width)
         .attr("height", height)
         .attr("color", "white")
         .attr("class", "svg");
 
-        // x-axis generator
-        let xAxis = createXAxis(svg, "xAxis", x);
-        // y-axis generator
-        let yAxis = createYAxis(svg, "yAxis", y);
+        this.xAxis = createXAxis(this.svg, "xAxis", this.xScale);
+        this.yAxis = createYAxis(this.svg, "yAxis", this.yScale);
 
-        // x-axis label
-        let xAxisLabel = createAxisLabel(svg, "x", "Time", "label")
+        this.container = document.querySelector(container);
 
-        // y -axis label
-        let yAxisLabel = createAxisLabel(svg, "y", "Number", "label")
+
+        this.text = "hi";
+
+        this.xAxisLabel = createAxisLabel(this.svg, "x", "Time", "label");
+        this.yAxisLabel = createAxisLabel(this.svg, "y", "Number", "label");
+
+        console.log(this.text);
 
         // line path
-        let linePath = createLine(svg, randomData, "yellow", x, y);
+        this.linePath = createLine(this.svg, randomData, "yellow", this.xScale, this.yScale);
 
         // area path
-        let areaPath = createArea(svg, randomData, "#041537", x, y);
+        this.areaPath = createArea(this.svg, randomData, "#041537", this.xScale, this.yScale);
 
         // datapoint circles
-        let circles = createCircles(svg, randomData, "yellow", x, y);
+        this.circles = createCircles(this.svg, randomData, "yellow", this.xScale, this.yScale);
 
         // Append the chart to the container
-        chartCont.append(svg.node());
+        this.container.append(this.svg.node());
 
         setInterval(() => {
-            updateGraph(svg, linePath, areaPath, randomData, xAxis, yAxis);
+            updateGraph(this.svg, this.linePath, this.areaPath, randomData, this.xAxis, this.yAxis);
         }, 1000);
+    }
+
+    update(){
+
+    }
+
+    changeDomain(){
+
+    }
 }
+let test = new graph(300, 300, margin, ".chartContainer");
+
 
 function updateGraph(svgVar, lineVar, areaVar, dataset, xAxis, yAxis) {
 
     globX += 6;
-    globY -= 6;
+    globY += 6;
 
     dataset.push({x: globX, y: globY});
 
@@ -208,5 +211,41 @@ function createYAxis(svgVar, className, yScale) {
 
     return yAxis;
 }
+
+function changeDomain(domainLength, dataset, xAxis){
+
+    let higherDomainBound = d3.max(dataset, (d) => { return d.x});
+
+    // If the domain Length results in a zero or negative lowerDomainBound, then it will defalut to higherDomainBound - 10;
+    let lowerDomainBound = (higherDomainBound - domainLength) <= 1 ? higherDomainBound - 10 : higherDomainBound - domainLength;
+    console.log(`[${lowerDomainBound}, ${higherDomainBound}]`)
+    // x-axis scale definition
+    let xScale = d3.scaleLinear([lowerDomainBound, higherDomainBound], [margin.left, width - margin.right]);
+
+    let filteredData = dataset.filter((d) => { return d.x >= lowerDomainBound })
+
+    xAxis.call(d3.axisBottom(xScale))
+
+
+}
+
+let valueDisplay = document.querySelector(".sliderNumInput")
+valueDisplay.onkeydown = async function(key){
+
+    if(key.keyCode == 13){
+        changeDomain(valueDisplay.value, randomData)
+
+        valueDisplay.blur();
+
+    }
+    
+}
+
+valueDisplay.addEventListener('input', () => {
+
+    if (valueDisplay.value.length > valueDisplay.maxLength){
+        valueDisplay.value = valueDisplay.value.slice(0, valueDisplay.maxLength);
+    }
+});
 
 createGraph();

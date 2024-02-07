@@ -11,32 +11,32 @@ let margin = {
 }
 
 // Random dataset of x and y values --TESTING--
-let randomData = [
-    {x: 0, y: 40},
-    {x: 10, y: 50},
-    {x: 20, y: 30},
-    {x: 30, y: 70},
-    {x: 40, y: 90}
-];
+let randomData = [];
 
 // Current x value --TESTING--
-let globX = 40
-let globY = 90
 
 // Transistion instance used for animation
 
 // Function for updating the graph
 class Graph {
 
-    constructor(width, height, marginObj, container, dataset) {
+    constructor(width, height, marginObj, container, dataset, [xAxisLabel, yAxisLabel]) {
+
+        this.globX = 0  
+        this.globY = 0
+
+        this.dataset = [];
+
+        console.log(this.dataset)
 
         // Set the high bound for the domain, based off the highest x value in the dataset
-        this.higherDomainBound = d3.max(dataset, (d) => { return d.x});
+        this.higherDomainBound = d3.max(this.dataset, (d) => { return d.x});
 
         this.lowerDomainBound = 0;
 
         this.domainLength = Infinity;
 
+        this.filteredData = this.dataset.filter((d) => { if (d.x >= this.lowerDomainBound) { return d.x}})
 
         // Defines the margin, width, height, and container for the object
         this.marginObj = marginObj;
@@ -46,10 +46,10 @@ class Graph {
 
 
         // Defines the initial x-scale for the object
-        this.xScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.x}), [marginObj.left, width - marginObj.right]);
+        this.xScale = d3.scaleLinear(d3.extent(this.dataset, (d) => { return d.x}), [marginObj.left, width - marginObj.right]);
 
         // Defines the initial y-scale for the object
-        this.yScale = d3.scaleLinear(d3.extent(dataset, (d) => { return d.y}), [height - marginObj.bottom, marginObj.top]);
+        this.yScale = d3.scaleLinear(d3.extent(this.dataset, (d) => { return d.y}), [height - marginObj.bottom, marginObj.top]);
 
         // Definies the svg for this object
         this.svg = d3.create('svg')
@@ -63,43 +63,45 @@ class Graph {
         this.yAxis = createYAxis(this.svg, "yAxis", this.yScale);
 
         // Defines the axis labels for the object
-        this.xAxisLabel = createAxisLabel(this.svg, "x", "Time", "label");
-        this.yAxisLabel = createAxisLabel(this.svg, "y", "Number", "label");
+        this.xAxisLabel = createAxisLabel(this.svg, "x", xAxisLabel, "label");
+        this.yAxisLabel = createAxisLabel(this.svg, "y", yAxisLabel, "label");
 
 
         // Defines the line path for this object
-        this.linePath = createLine(this.svg, dataset, "yellow", this.xScale, this.yScale);
+        this.linePath = createLine(this.svg, this.dataset, "yellow", this.xScale, this.yScale);
 
         // Defines the area path for this object
-        this.areaPath = createArea(this.svg, dataset, "#041537", this.xScale, this.yScale);
+        this.areaPath = createArea(this.svg, this.dataset, "#041537", this.xScale, this.yScale);
 
         // datapoint circles
-        this.circles = createCircles(this.svg, dataset, "yellow", this.xScale, this.yScale);
+        this.circles = createCircles(this.svg, this.dataset, "yellow", this.xScale, this.yScale);
+
     }
 
-    create(dataset) {
+    create() {
         // Append the chart to the container
         this.container.append(this.svg.node());
 
 
         // Interval that updates the graph every 1 second --USED FOR TESTING--
         setInterval(() => {
-            this.update(dataset);
+            this.update(this.dataset);
         }, 1000);
     }
 
-    update(dataset) {
+    update() {
 
+        
         // Global x and y values --USED FOR TESTING--
-        globX += 6;
-        globY += 6;
+        this.globX += Math.round(Math.random()*10);
+        this.globY += Math.round(Math.random()*10);
 
         // Pushes the global values to the dataset --USED FOR TESTING--
-        dataset.push({x: globX, y: globY});
+        this.dataset.push({x: this.globX, y: this.globY});
         
 
         // Set the high bound for the domain, based off the highest x value in the dataset
-        this.higherDomainBound = d3.max(dataset, (d) => { return d.x});
+        this.higherDomainBound = d3.max(this.dataset, (d) => { return d.x});
 
         // Sets the low bound for the domain, based off (higherDomainBound - domainLength)
         // If the domain Length results in a zero or negative lowerDomainBound, then it will to the full domain;
@@ -120,10 +122,12 @@ class Graph {
             }
         })()
 
+        this.filteredData = this.dataset.filter((d) => { if (d.x >= this.lowerDomainBound) { return d.x}})
+
 
         // Re-definies the x and y scales for this object
         this.xScale = d3.scaleLinear([this.lowerDomainBound, this.higherDomainBound], [this.marginObj.left, this.width - this.marginObj.right]);
-        this.yScale = d3.scaleLinear(d3.extent(randomData, (d) => { return d.y}), [this.height - this.marginObj.bottom, this.marginObj.top]);
+        this.yScale = d3.scaleLinear(d3.extent(this.filteredData, (d) => { return d.y}), [this.height - this.marginObj.bottom, this.marginObj.top]);
 
 
         // Creates a new line generator
@@ -134,7 +138,7 @@ class Graph {
         // Creates a new area generator
         let areaGen = d3.area()
         .x((d) => this.xScale(d.x))
-        .y0(this.yScale(d3.min(dataset, (e) => {return e.y})))
+        .y0(this.yScale(d3.min(this.filteredData, (e) => {return e.y})))
         .y1((d) => this.yScale(d.y));
 
         // Calls this objects axes using the objects new scales
@@ -143,17 +147,17 @@ class Graph {
 
 
         // Resets the datum used for this object's line path and redraws the line
-        this.linePath.datum(dataset)
+        this.linePath.datum(this.filteredData)
         .attr("d", lineGen);
 
         // Resets the datum used for this object's area path and redraws the area
-        this.areaPath.datum(dataset)
+        this.areaPath.datum(this.filteredData)
         .attr("d", areaGen);
 
 
         // Adds circles to all the new data points
         this.circles = this.svg.selectAll("circle")
-            .data(dataset)
+            .data(this.filteredData)
             .join("circle")
             .attr("r", 2.5)
             .attr("cx", (d) => {return this.xScale(d.x)})
@@ -162,16 +166,26 @@ class Graph {
             .attr("class", "circle");
     }
 
-    changeDomain(domainLength, dataset) {
+    changeDomain(domainLength) {
         this.domainLength = domainLength;
 
-        let filteredData = dataset.filter((d) => { return d.x >= this.lowerDomainBound })
+        this.filteredData = this.dataset.filter((d) => { if (d.x >= this.lowerDomainBound) { return d.x}})
     }
 }
 
-let test = new Graph(300, 300, margin, ".chartContainer", randomData);
+let test = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
+let test2 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
+let test3 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
+let test4 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
+let test5 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
+let test6 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
 
 test.create(randomData);
+test2.create(randomData);
+test3.create(randomData);
+test4.create(randomData);
+test5.create(randomData);
+test6.create(randomData);
 
 function createAxisLabel(svgVar, axis, label, className) {
     let axisLabel = svgVar.append("text")
@@ -212,7 +226,7 @@ function createArea(svgVar, dataset, color, xScale, yScale){
     
     let areaGen = d3.area()
         .x((d) => xScale(d.x))
-        .y0(yScale(d3.min(randomData, (e) => {return e.y})))
+        .y0(yScale(d3.min(dataset, (e) => {return e.y})))
         .y1((d) => yScale(d.y));
 
         // area path generator
@@ -263,7 +277,7 @@ let valueDisplay = document.querySelector(".sliderNumInput")
 valueDisplay.onkeydown = async function(key){
 
     if(key.keyCode == 13){
-        test.changeDomain(valueDisplay.value, randomData)
+        test.changeDomain(valueDisplay.value, this.dataset)
 
         valueDisplay.blur();
 

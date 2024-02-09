@@ -142,10 +142,16 @@ class Graph {
         .y1((d) => this.yScale(d.y));
 
         // Calls this objects axes using the objects new scales
-        this.xAxis.transition().duration(250).call(d3.axisBottom(this.xScale));
+        // Ticks: 10 if the highest # is <= 100; else, the tick count = 5
+        this.xAxis.transition().duration(250).call(d3.axisBottom(this.xScale).ticks((() => {
+            if (this.higherDomainBound >= 100) {
+                return 5;
+            }
+
+            return 10;
+        })()));
         this.yAxis.transition().duration(250).call(d3.axisLeft(this.yScale));
 
-        console.log(this.linePath)
         // Resets the datum used for this object's line path and redraws the line
         this.linePath.datum(this.filteredData)
         this.linePath.transition().duration(250).attr("d", lineGen);

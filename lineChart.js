@@ -142,17 +142,17 @@ class Graph {
         .y1((d) => this.yScale(d.y));
 
         // Calls this objects axes using the objects new scales
-        this.xAxis.call(d3.axisBottom(this.xScale));
-        this.yAxis.call(d3.axisLeft(this.yScale));
+        this.xAxis.transition().duration(250).call(d3.axisBottom(this.xScale));
+        this.yAxis.transition().duration(250).call(d3.axisLeft(this.yScale));
 
-
+        console.log(this.linePath)
         // Resets the datum used for this object's line path and redraws the line
         this.linePath.datum(this.filteredData)
-        .attr("d", lineGen);
+        this.linePath.transition().duration(250).attr("d", lineGen);
 
         // Resets the datum used for this object's area path and redraws the area
         this.areaPath.datum(this.filteredData)
-        .attr("d", areaGen);
+        this.areaPath.transition().duration(250).attr("d", areaGen);
 
 
         // Adds circles to all the new data points
@@ -192,7 +192,7 @@ function createAxisLabel(svgVar, axis, label, className) {
         .attr("class", className)
         .attr("text-anchor", "middle")
         .attr("y", (axis == 'x') ? height-40 : width/5)
-        .attr("x", (axis == 'x') ? (width)/2 : height/2)
+        .attr("x", (axis == 'x') ? (width + margin.right)/2 : (height)/2)
         .text(label);
 
     if (axis !== 'x'){

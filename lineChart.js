@@ -192,7 +192,7 @@ function createAxisLabel(svgVar, axis, label, className) {
         .attr("class", className)
         .attr("text-anchor", "middle")
         .attr("y", (axis == 'x') ? height-40 : width/5)
-        .attr("x", (axis == 'x') ? (width + margin.right)/2 : (height)/2)
+        .attr("x", (axis == 'x') ? (width + margin.right)/2 : (height+ margin.top)/2)
         .text(label);
 
     if (axis !== 'x'){

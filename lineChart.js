@@ -15,6 +15,7 @@ class Graph {
         this.globX = 0  
         this.globY = 0
 
+        // iinitializes the dataset for this graph
         this.dataset = [];
 
         console.log(this.dataset)
@@ -167,12 +168,16 @@ class Graph {
         //     .attr("class", "circle");
     }
 
+    // function for changing the data points that are displayed on the graph
+    // Starts from the highest x value
     changeDomain(domainLength) {
         this.domainLength = domainLength;
 
         this.filteredData = this.dataset.filter((d) => { if (d.x >= this.lowerDomainBound) { return d.x}})
     }
 
+    // Creates a label for one axis of the graph
+    // axis = "x" or "y"
     createAxisLabel(axis, className, label){
         let axisLabel = this.svg.append("text")
         .attr("class", className)
@@ -190,6 +195,7 @@ class Graph {
         return axisLabel;
     }
 
+    // creates a line of specified color using this graph's data
     createLine(color){
         
         //line generator
@@ -209,6 +215,7 @@ class Graph {
 
     }
 
+    // creates an area of specified color using this graph's data
     createArea(color){
         let areaGen = d3.area()
         .x((d) => this.xScale(d.x))
@@ -227,6 +234,7 @@ class Graph {
         return areaSVG;
     }
 
+    // creates circles at each of the data points using this graph's data
     createCircles(color){
         let circle = this.svg.selectAll("circle")
         .data(this.filteredData)
@@ -239,6 +247,7 @@ class Graph {
         return circle;
     }
 
+    // creates the x-axis using this.xScale
     createXAxis(className){
         let xAxis = this.svg.append("g")
         .attr("transform", `translate(0, ${this.height - this.margin.bottom})`)
@@ -248,6 +257,7 @@ class Graph {
         return xAxis;
     }
 
+    // creates the y-axis using this.yScale
     createYAxis(className){
         let yAxis = this.svg.append("g")
         .attr("transform", `translate(${this.margin.left}, 0)`)

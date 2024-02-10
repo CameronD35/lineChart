@@ -49,8 +49,8 @@ class Graph {
         .attr("class", "svg");
 
         // Definies and creaates the axes for this object
-        this.xAxis = createXAxis(this.svg, "xAxis", this.xScale, this.height, this.margin.bottom);
-        this.yAxis = createYAxis(this.svg, "yAxis", this.yScale, this.margin.left);
+        this.xAxis = this.createXAxis("xAxis");
+        this.yAxis = this.createYAxis("yAxis");
 
         // Defines the axis labels for the object
         this.xAxisLabel = this.createAxisLabel("x", "label", xAxisLabel);
@@ -58,13 +58,13 @@ class Graph {
 
 
         // Defines the line path for this object
-        this.linePath = createLine(this.svg, this.dataset, "yellow", this.xScale, this.yScale);
+        this.linePath = this.createLine("yellow");
 
         // Defines the area path for this object
-        this.areaPath = createArea(this.svg, this.dataset, "#041537", this.xScale, this.yScale);
+        this.areaPath = this.createArea("#041537");
 
         // datapoint circles
-        this.circles = createCircles(this.svg, this.dataset, "yellow", this.xScale, this.yScale);
+        this.circles = this.createCircles("yellow");
 
     }
 
@@ -143,23 +143,28 @@ class Graph {
         this.yAxis.transition().duration(250).call(d3.axisLeft(this.yScale));
 
         // Resets the datum used for this object's line path and redraws the line
+        // Adds transition to the line
         this.linePath.datum(this.filteredData)
         this.linePath.transition().duration(250).attr("d", lineGen);
 
         // Resets the datum used for this object's area path and redraws the area
+        // Adds transition to the area
         this.areaPath.datum(this.filteredData)
         this.areaPath.transition().duration(250).attr("d", areaGen);
 
 
         // Adds circles to all the new data points
-        this.circles = this.svg.selectAll("circle")
-            .data(this.filteredData)
-            .join("circle")
-            .attr("r", 2.5)
-            .attr("cx", (d) => {return this.xScale(d.x)})
-            .attr("cy", (d) => {return this.yScale(d.y)})
-            .attr("fill", "yellow")
-            .attr("class", "circle");
+        this.circles = this.createCircles("yellow");
+        this.circles.transition().duration(250);
+        
+        // svg.selectAll("circle")
+        //     .data(this.filteredData)
+        //     .join("circle")
+        //     .attr("r", 2.5)
+        //     .attr("cx", (d) => {return this.xScale(d.x)})
+        //     .attr("cy", (d) => {return this.yScale(d.y)})
+        //     .attr("fill", "yellow")
+        //     .attr("class", "circle");
     }
 
     changeDomain(domainLength) {
@@ -204,20 +209,52 @@ class Graph {
 
     }
 
-    createArea(){
+    createArea(color){
+        let areaGen = d3.area()
+        .x((d) => this.xScale(d.x))
+        .y0(this.yScale(d3.min(this.dataset, (e) => {return e.y})))
+        .y1((d) => this.yScale(d.y));
 
+        // area path generator
+        let areaSVG = this.svg.append("path")
+            .datum(this.dataset)
+            .attr("d", areaGen)
+            .attr("stroke", "none")
+            .attr("fill", color)
+            .attr("fill-opacity", "0.3")
+            .attr("class", "area");
+
+        return areaSVG;
     }
 
-    createCircles(){
+    createCircles(color){
+        let circle = this.svg.selectAll("circle")
+        .data(this.filteredData)
+        .join("circle")
+        .attr("r", 2.5)
+        .attr("cx", (d) => {return this.xScale(d.x)})
+        .attr("cy", (d) => {return this.yScale(d.y)})
+        .attr("fill", color);
 
+        return circle;
     }
 
-    createXAxis(){
+    createXAxis(className){
+        let xAxis = this.svg.append("g")
+        .attr("transform", `translate(0, ${this.height - this.margin.bottom})`)
+        .attr("class", className)
+        .call(d3.axisBottom(this.xScale));
 
+        return xAxis;
     }
 
-    createYAxis(){
+    createYAxis(className){
+        let yAxis = this.svg.append("g")
+        .attr("transform", `translate(${this.margin.left}, 0)`)
+        .attr("class", className)
+        .call(d3.axisLeft(this.yScale));
 
+        return yAxis;
     }
 }
 
@@ -252,74 +289,74 @@ test6.create(randomData);
 //     return axisLabel;
 // }
 
-function createLine(svgVar, dataset, color, xScale, yScale) {
+// function createLine(svgVar, dataset, color, xScale, yScale) {
 
-    //line generator
-    let lineGen = d3.line()
-        .x((d) => xScale(d.x))
-        .y((d) => yScale(d.y))
+//     //line generator
+//     let lineGen = d3.line()
+//         .x((d) => xScale(d.x))
+//         .y((d) => yScale(d.y))
     
-    // line path generator
-    let lineSVG = svgVar.append("path")
-        .datum(dataset)
-        .attr("d", lineGen)
-        .attr("stroke", color)
-        .attr("fill", "none")
-        .attr("class", "line");
+//     // line path generator
+//     let lineSVG = svgVar.append("path")
+//         .datum(dataset)
+//         .attr("d", lineGen)
+//         .attr("stroke", color)
+//         .attr("fill", "none")
+//         .attr("class", "line");
 
-    return lineSVG;
-}
+//     return lineSVG;
+// }
 
-function createArea(svgVar, dataset, color, xScale, yScale){
+// function createArea(svgVar, dataset, color, xScale, yScale){
     
-    let areaGen = d3.area()
-        .x((d) => xScale(d.x))
-        .y0(yScale(d3.min(dataset, (e) => {return e.y})))
-        .y1((d) => yScale(d.y));
+//     let areaGen = d3.area()
+//         .x((d) => xScale(d.x))
+//         .y0(yScale(d3.min(dataset, (e) => {return e.y})))
+//         .y1((d) => yScale(d.y));
 
-        // area path generator
-    let areaSVG = svgVar.append("path")
-        .datum(dataset)
-        .attr("d", areaGen)
-        .attr("stroke", "none")
-        .attr("fill", color)
-        .attr("fill-opacity", "0.3")
-        .attr("class", "area");
+//         // area path generator
+//     let areaSVG = svgVar.append("path")
+//         .datum(dataset)
+//         .attr("d", areaGen)
+//         .attr("stroke", "none")
+//         .attr("fill", color)
+//         .attr("fill-opacity", "0.3")
+//         .attr("class", "area");
 
-    return areaSVG;
-}
+//     return areaSVG;
+// }
 
-function createCircles(svgVar, dataset, color, xScale, yScale) {
-    let circle = svgVar.selectAll("circle")
-        .data(dataset)
-        .join("circle")
-        .attr("r", 2.5)
-        .attr("cx", (d) => {return xScale(d.x)})
-        .attr("cy", (d) => {return yScale(d.y)})
-        .attr("fill", color);
+// function createCircles(svgVar, dataset, color, xScale, yScale) {
+//     let circle = svgVar.selectAll("circle")
+//         .data(dataset)
+//         .join("circle")
+//         .attr("r", 2.5)
+//         .attr("cx", (d) => {return xScale(d.x)})
+//         .attr("cy", (d) => {return yScale(d.y)})
+//         .attr("fill", color);
 
-    return circle;
-}
+//     return circle;
+// }
 
-function createXAxis(svgVar, className, xScale, height, bottomMargin) {
+// function createXAxis(svgVar, className, xScale, height, bottomMargin) {
 
-    let xAxis = svgVar.append("g")
-    .attr("transform", `translate(0, ${height - bottomMargin})`)
-    .attr("class", className)
-    .call(d3.axisBottom(xScale));
+//     let xAxis = svgVar.append("g")
+//     .attr("transform", `translate(0, ${height - bottomMargin})`)
+//     .attr("class", className)
+//     .call(d3.axisBottom(xScale));
 
-    return xAxis;
-}
+//     return xAxis;
+// }
 
-function createYAxis(svgVar, className, yScale, leftMargin) {
+// function createYAxis(svgVar, className, yScale, leftMargin) {
 
-    let yAxis = svgVar.append("g")
-    .attr("transform", `translate(${leftMargin}, 0)`)
-    .attr("class", className)
-    .call(d3.axisLeft(yScale));
+//     let yAxis = svgVar.append("g")
+//     .attr("transform", `translate(${leftMargin}, 0)`)
+//     .attr("class", className)
+//     .call(d3.axisLeft(yScale));
 
-    return yAxis;
-}
+//     return yAxis;
+// }
 
 let valueDisplay = document.querySelector(".sliderNumInput")
 valueDisplay.onkeydown = async function(key){

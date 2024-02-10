@@ -1,15 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-let width = 300;
-let height = 300;
-
-let margin = {
-    top: 20,
-    right: 20,
-    bottom: 30,
-    left: 40
-}
-
 // Random dataset of x and y values --TESTING--
 let randomData = [];
 
@@ -39,17 +29,17 @@ class Graph {
         this.filteredData = this.dataset.filter((d) => { if (d.x >= this.lowerDomainBound) { return d.x}})
 
         // Defines the margin, width, height, and container for the object
-        this.marginObj = marginObj;
+        this.margin = marginObj;
         this.width = width;
         this.height = height;
         this.container = document.querySelector(container);
 
 
         // Defines the initial x-scale for the object
-        this.xScale = d3.scaleLinear(d3.extent(this.dataset, (d) => { return d.x}), [marginObj.left, width - marginObj.right]);
+        this.xScale = d3.scaleLinear(d3.extent(this.dataset, (d) => { return d.x}), [this.margin.left, width - this.margin.right]);
 
         // Defines the initial y-scale for the object
-        this.yScale = d3.scaleLinear(d3.extent(this.dataset, (d) => { return d.y}), [height - marginObj.bottom, marginObj.top]);
+        this.yScale = d3.scaleLinear(d3.extent(this.dataset, (d) => { return d.y}), [height - this.margin.bottom, this.margin.top]);
 
         // Definies the svg for this object
         this.svg = d3.create('svg')
@@ -59,12 +49,12 @@ class Graph {
         .attr("class", "svg");
 
         // Definies and creaates the axes for this object
-        this.xAxis = createXAxis(this.svg, "xAxis", this.xScale);
-        this.yAxis = createYAxis(this.svg, "yAxis", this.yScale);
+        this.xAxis = createXAxis(this.svg, "xAxis", this.xScale, this.height, this.margin.bottom);
+        this.yAxis = createYAxis(this.svg, "yAxis", this.yScale, this.margin.left);
 
         // Defines the axis labels for the object
-        this.xAxisLabel = createAxisLabel(this.svg, "x", xAxisLabel, "label");
-        this.yAxisLabel = createAxisLabel(this.svg, "y", yAxisLabel, "label");
+        this.xAxisLabel = this.createAxisLabel("x", "label", xAxisLabel);
+        this.yAxisLabel = this.createAxisLabel("y", "label", yAxisLabel);
 
 
         // Defines the line path for this object
@@ -126,8 +116,8 @@ class Graph {
 
 
         // Re-definies the x and y scales for this object
-        this.xScale = d3.scaleLinear([this.lowerDomainBound, this.higherDomainBound], [this.marginObj.left, this.width - this.marginObj.right]);
-        this.yScale = d3.scaleLinear(d3.extent(this.filteredData, (d) => { return d.y}), [this.height - this.marginObj.bottom, this.marginObj.top]);
+        this.xScale = d3.scaleLinear([this.lowerDomainBound, this.higherDomainBound], [this.margin.left, this.width - this.margin.right]);
+        this.yScale = d3.scaleLinear(d3.extent(this.filteredData, (d) => { return d.y}), [this.height - this.margin.bottom, this.margin.top]);
 
 
         // Creates a new line generator
@@ -177,14 +167,66 @@ class Graph {
 
         this.filteredData = this.dataset.filter((d) => { if (d.x >= this.lowerDomainBound) { return d.x}})
     }
+
+    createAxisLabel(axis, className, label){
+        let axisLabel = this.svg.append("text")
+        .attr("class", className)
+        .attr("text-anchor", "middle")
+        .attr("y", (axis == 'x') ? this.height-40 : this.width/5)
+        .attr("x", (axis == 'x') ? (this.width + this.margin.right)/2 : (this.height+ this.margin.top)/2)
+        .text(label);
+
+        if (axis !== 'x'){
+            axisLabel
+                .attr("transform-origin", "center")
+                .attr("transform", "rotate(-90)");
+        }
+
+        return axisLabel;
+    }
+
+    createLine(color){
+        
+        //line generator
+        let lineGen = d3.line()
+        .x((d) => this.xScale(d.x))
+        .y((d) => this.yScale(d.y))
+
+        // line path generator
+        let lineSVG = this.svg.append("path")
+        .datum(this.dataset)
+        .attr("d", lineGen)
+        .attr("stroke", color)
+        .attr("fill", "none")
+        .attr("class", "line");
+
+        return lineSVG;
+
+    }
+
+    createArea(){
+
+    }
+
+    createCircles(){
+
+    }
+
+    createXAxis(){
+
+    }
+
+    createYAxis(){
+
+    }
 }
 
-let test = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
-let test2 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
-let test3 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
-let test4 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
-let test5 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
-let test6 = new Graph(300, 300, margin, ".chartContainer", randomData, ["Time", "Number"]);
+let test = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
+let test2 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
+let test3 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
+let test4 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
+let test5 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
+let test6 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
 
 test.create(randomData);
 test2.create(randomData);
@@ -193,22 +235,22 @@ test4.create(randomData);
 test5.create(randomData);
 test6.create(randomData);
 
-function createAxisLabel(svgVar, axis, label, className) {
-    let axisLabel = svgVar.append("text")
-        .attr("class", className)
-        .attr("text-anchor", "middle")
-        .attr("y", (axis == 'x') ? height-40 : width/5)
-        .attr("x", (axis == 'x') ? (width + margin.right)/2 : (height+ margin.top)/2)
-        .text(label);
+// function createAxisLabel(svgVar, axis, label, className, [height, width], [rightMargin, topMargin]) {
+//     let axisLabel = svgVar.append("text")
+//         .attr("class", className)
+//         .attr("text-anchor", "middle")
+//         .attr("y", (axis == 'x') ? height-40 : width/5)
+//         .attr("x", (axis == 'x') ? (width + rightMargin)/2 : (height+ topMargin)/2)
+//         .text(label);
 
-    if (axis !== 'x'){
-        axisLabel
-            .attr("transform-origin", "center")
-            .attr("transform", "rotate(-90)");
-    }
+//     if (axis !== 'x'){
+//         axisLabel
+//             .attr("transform-origin", "center")
+//             .attr("transform", "rotate(-90)");
+//     }
 
-    return axisLabel;
-}
+//     return axisLabel;
+// }
 
 function createLine(svgVar, dataset, color, xScale, yScale) {
 
@@ -259,20 +301,20 @@ function createCircles(svgVar, dataset, color, xScale, yScale) {
     return circle;
 }
 
-function createXAxis(svgVar, className, xScale) {
+function createXAxis(svgVar, className, xScale, height, bottomMargin) {
 
     let xAxis = svgVar.append("g")
-    .attr("transform", `translate(0, ${height - margin.bottom})`)
+    .attr("transform", `translate(0, ${height - bottomMargin})`)
     .attr("class", className)
     .call(d3.axisBottom(xScale));
 
     return xAxis;
 }
 
-function createYAxis(svgVar, className, yScale) {
+function createYAxis(svgVar, className, yScale, leftMargin) {
 
     let yAxis = svgVar.append("g")
-    .attr("transform", `translate(${margin.left}, 0)`)
+    .attr("transform", `translate(${leftMargin}, 0)`)
     .attr("class", className)
     .call(d3.axisLeft(yScale));
 

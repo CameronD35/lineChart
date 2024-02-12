@@ -2,7 +2,6 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 // Random dataset of x and y values --TESTING--
 let randomData = [];
-
 // Current x value --TESTING--
 
 // Transistion instance used for animation
@@ -10,13 +9,16 @@ let randomData = [];
 // Function for updating the graph
 class Graph {
 
-    constructor(width, height, marginObj, container, dataset, [xAxisLabel, yAxisLabel]) {
+    constructor(width, height, marginObj, container, dataset, [xAxisLabel, yAxisLabel], [graphColorBottom, graphColorTop], id) {
 
+        this.id = id;
         this.globX = 0  
         this.globY = 0
 
         // iinitializes the dataset for this graph
         this.dataset = [];
+
+        this.maxY = d3.max(this.dataset, (d) => { return d.y});
 
         console.log(this.dataset)
 
@@ -49,6 +51,10 @@ class Graph {
         .attr("color", "white")
         .attr("class", "svg");
 
+        this.gradient = this.createGradient([graphColorBottom, graphColorTop]);
+
+        console.log(this.gradient)
+
         // Definies and creaates the axes for this object
         this.xAxis = this.createXAxis("xAxis");
         this.yAxis = this.createYAxis("yAxis");
@@ -59,13 +65,13 @@ class Graph {
 
 
         // Defines the line path for this object
-        this.linePath = this.createLine("yellow");
+        this.linePath = this.createLine();
 
         // Defines the area path for this object
-        this.areaPath = this.createArea("#041537");
+        this.areaPath = this.createArea();
 
         // datapoint circles
-        this.circles = this.createCircles("yellow");
+        this.circles = this.createCircles("white");
 
     }
 
@@ -89,6 +95,8 @@ class Graph {
 
         // Pushes the global values to the dataset --USED FOR TESTING--
         this.dataset.push({x: this.globX, y: this.globY});
+
+        this.maxY = d3.max(this.dataset, (d) => { return d.y});
         
 
         // Set the high bound for the domain, based off the highest x value in the dataset
@@ -155,17 +163,8 @@ class Graph {
 
 
         // Adds circles to all the new data points
-        this.circles = this.createCircles("yellow");
+        this.circles = this.createCircles("white");
         this.circles.transition().duration(250);
-        
-        // svg.selectAll("circle")
-        //     .data(this.filteredData)
-        //     .join("circle")
-        //     .attr("r", 2.5)
-        //     .attr("cx", (d) => {return this.xScale(d.x)})
-        //     .attr("cy", (d) => {return this.yScale(d.y)})
-        //     .attr("fill", "yellow")
-        //     .attr("class", "circle");
     }
 
     // function for changing the data points that are displayed on the graph
@@ -196,7 +195,7 @@ class Graph {
     }
 
     // creates a line of specified color using this graph's data
-    createLine(color){
+    createLine(){
         
         //line generator
         let lineGen = d3.line()
@@ -207,7 +206,8 @@ class Graph {
         let lineSVG = this.svg.append("path")
         .datum(this.dataset)
         .attr("d", lineGen)
-        .attr("stroke", color)
+        .style("stroke", `url(#${this.id}-lineGradient)`)
+        .attr('stroke-width', '2px')
         .attr("fill", "none")
         .attr("class", "line");
 
@@ -216,7 +216,7 @@ class Graph {
     }
 
     // creates an area of specified color using this graph's data
-    createArea(color){
+    createArea(){
         let areaGen = d3.area()
         .x((d) => this.xScale(d.x))
         .y0(this.yScale(d3.min(this.dataset, (e) => {return e.y})))
@@ -227,7 +227,7 @@ class Graph {
             .datum(this.dataset)
             .attr("d", areaGen)
             .attr("stroke", "none")
-            .attr("fill", color)
+            .attr('fill', `url(#${this.id}-lineGradient)`)
             .attr("fill-opacity", "0.3")
             .attr("class", "area");
 
@@ -242,7 +242,8 @@ class Graph {
         .attr("r", 2.5)
         .attr("cx", (d) => {return this.xScale(d.x)})
         .attr("cy", (d) => {return this.yScale(d.y)})
-        .attr("fill", color);
+        .attr("fill", color)
+        .attr('fill-opacity', '0.8');
 
         return circle;
     }
@@ -266,14 +267,36 @@ class Graph {
 
         return yAxis;
     }
+
+    // Creates gradient tag to be applied to line and area paths
+    createGradient([bottomColor, topColor]){
+        let gradient = this.svg.append('defs').append(`linearGradient`)
+        .attr('id', `${this.id}-lineGradient`)
+        .attr('x1', '0%')
+        .attr('y1', '0%')
+        .attr('x2', '0%')
+        .attr('y2', '100%');
+        
+        gradient.append('stop')
+        .attr('offset', '0%')
+        .style('stop-color', topColor)
+        .style('stop-opacity', 1);
+        
+        gradient.append('stop')
+        .attr('offset', '100%')
+        .style('stop-color', bottomColor)
+        .style('stop-opacity', 1);
+
+        return gradient;
+    }
 }
 
-let test = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
-let test2 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
-let test3 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
-let test4 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
-let test5 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
-let test6 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"]);
+let test = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"], ['blue', 'red'], 'graph1');
+let test2 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"], ['blue', 'green'], 'graph2');
+let test3 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"], ['red', 'orange'], 'graph3');
+let test4 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"], ['yellow', 'purple'], 'graph4');
+let test5 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"], ['black', 'white'], 'graph5');
+let test6 = new Graph(300, 300, {top: 20, right: 20, bottom: 30, left: 40}, ".chartContainer", randomData, ["Time", "Number"], ['pink', 'red'], 'graph6');
 
 test.create(randomData);
 test2.create(randomData);

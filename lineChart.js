@@ -323,3 +323,14 @@ valueDisplay.addEventListener('input', () => {
         valueDisplay.value = valueDisplay.value.slice(0, valueDisplay.maxLength);
     }
 });
+
+function testSquareColor(){
+    let square = document.getElementById("testSquare");
+    for(let i = 0; i <= 255; i++){
+        setTimeout(() => {
+            square.style.setProperty("background-color", `rgb(${255-i}, 0, ${i})`);
+        }, i*10);
+    }
+}
+
+testSquareColor();
